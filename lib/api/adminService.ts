@@ -30,4 +30,20 @@ export const adminService = {
     const res = await apiClient.get("/admin/analytics");
     return res.data;
   },
+
+  /** Get items with status filter */
+  getItems: async (params: { status?: string; search?: string } = {}) => {
+    const res = await apiClient.get("/admin/items", { params });
+    return res.data;
+  },
+
+  /** Categories */
+  createCategory: async (data: any) => {
+    const res = await apiClient.post("/admin/categories", data);
+    return res.data;
+  },
+  deleteCategory: async (id: number) => {
+    const res = await apiClient.delete(`/admin/categories/${id}`);
+    return res.data;
+  },
 };

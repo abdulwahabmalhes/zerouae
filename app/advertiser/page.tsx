@@ -31,7 +31,7 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function AdvertiserPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const router = useRouter();
   const [tab, setTab]         = useState("overview");
   const [myAds, setMyAds]     = useState<any[]>([]);
@@ -62,6 +62,24 @@ export default function AdvertiserPage() {
     categoryService.getAll().then(res => { if (res.success && res.data?.length) setCategories(res.data); });
   }, []);
 
+  // ── Auth Guard Guard ──
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login?redirect=/advertiser");
+    }
+  }, [isLoading, user, router]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[var(--color-bg-page)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin" />
+          <p className="text-[var(--color-text-muted)] font-bold text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -86,14 +104,8 @@ export default function AdvertiserPage() {
         setImageFile(null); setImagePreview(null);
         setTimeout(() => { setSuccess(""); setTab("my-ads"); }, 2000);
       }
-    } catch {
-      setSuccess("Ad submitted for review! (Demo mode)");
-      const demoAd = { id: Date.now(), ...form, price: Number(form.price), category: { name: categories.find((c: any) => c.id === Number(form.category_id))?.name || "General" }, image: imagePreview || DEMO_LISTINGS[0].image, status: "review", created_at: new Date().toISOString(), total_click: 0 };
-      setMyAds(prev => [demoAd, ...prev]);
-      setForm({ name: "", price: "", description: "", address: "", category_id: "", contact: "" });
-      setCustomVals({});
-      setImageFile(null); setImagePreview(null);
-      setTimeout(() => { setSuccess(""); setTab("my-ads"); }, 2000);
+    } catch (err: any) {
+      setSuccess(err.response?.data?.message || "Error submitting ad. Please check all fields.");
     }
     setPosting(false);
   };

@@ -10,7 +10,11 @@ export const authService = {
   /** Verify OTP → returns { success, token, data: user } */
   verifyOtp: async (mobile: string, otp: string) => {
     const res = await apiClient.get("/verify-otp", { params: { mobile, otp } });
-    return res.data;
+    const d = res.data;
+    if (d?.success && d?.data?.token) {
+      return { success: true, token: d.data.token, data: d.data.data, message: d.message };
+    }
+    return d;
   },
 
   /** Register new user */
@@ -19,13 +23,22 @@ export const authService = {
     password: string; password_confirmation: string;
   }) => {
     const res = await apiClient.post("/user-signup", payload);
-    return res.data;
+    const d = res.data;
+    if (d?.success && d?.data?.token) {
+      return { success: true, token: d.data.token, data: d.data.data, message: d.message };
+    }
+    return d;
   },
 
   /** Email + password login */
   loginEmail: async (email: string, password: string) => {
     const res = await apiClient.post("/login", { email, password });
-    return res.data;
+    const d = res.data;
+    // Normalize: API returns { success, data: { token, data: user } }
+    if (d?.success && d?.data?.token) {
+      return { success: true, token: d.data.token, data: d.data.data, message: d.message };
+    }
+    return d;
   },
 
   /** Get authenticated user profile */

@@ -51,7 +51,7 @@ export function ListingCard({ listing, index = 0, viewMode = "grid" }: ListingCa
         <Link href={`/listing/${listing.id}`} className="group block">
           <div className="card flex gap-5 p-4 hover:border-[var(--color-primary)]/20">
             <div className="relative w-32 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-[var(--color-bg-soft)]">
-              <Image src={image} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={image} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               {isFeatured && (
                 <span className="absolute top-2 left-2 badge badge-primary text-[8px]">Featured</span>
               )}
@@ -97,11 +97,10 @@ export function ListingCard({ listing, index = 0, viewMode = "grid" }: ListingCa
         <div className="card overflow-hidden h-full flex flex-col">
           {/* Image */}
           <div className="relative h-52 overflow-hidden bg-[var(--color-bg-soft)]">
-            <Image
+            <img
               src={image}
               alt={title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-700"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
             {/* Overlays */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />

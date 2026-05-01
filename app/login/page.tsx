@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Phone, Mail, Lock, Eye, EyeOff, Loader2, ChevronRight, ArrowLeft } from "lucide-react";
 import { useLanguage } from "@/lib/context/LanguageContext";
@@ -11,10 +11,15 @@ import { authService } from "@/lib/api/authService";
 
 type Step = "method" | "phone_input" | "otp" | "email";
 
-export default function LoginPage() {
+function LoginContent() {
   const { t, dir } = useLanguage();
   const { login }   = useAuth();
   const router      = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo  = searchParams.get("redirect") ?? null;
+
+  const getRedirect = (type: string) =>
+    redirectTo ?? (type === "admin" ? "/admin" : "/advertiser");
 
   const [step, setStep]           = useState<Step>("method");
   const [phone, setPhone]         = useState("");
@@ -56,7 +61,7 @@ export default function LoginPage() {
       const res = await authService.verifyOtp(phone, code);
       if (res.success && res.token) {
         login(res.token, res.data);
-        router.push(res.data?.type === "admin" ? "/admin" : "/advertiser");
+        router.push(getRedirect(res.data?.type));
       } else setError(res.message ?? "Invalid OTP");
     } catch { setError("Verification failed"); }
     finally { setLoading(false); }
@@ -69,7 +74,7 @@ export default function LoginPage() {
       const res = await authService.loginEmail(email, password);
       if (res.success && res.token) {
         login(res.token, res.data);
-        router.push(res.data?.type === "admin" ? "/admin" : "/advertiser");
+        router.push(getRedirect(res.data?.type));
       } else setError(res.message ?? "Invalid credentials");
     } catch { setError("Login failed"); }
     finally { setLoading(false); }
@@ -284,5 +289,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[var(--color-bg-page)] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
