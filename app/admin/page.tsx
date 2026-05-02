@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard, ListChecks, Users, Tag, BarChart3,
   LogOut, Menu, X, Check, Trash2, Eye, TrendingUp,
-  ShieldCheck, Clock, Star, AlertCircle
+  ShieldCheck, Clock, Star, AlertCircle, Plus
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { listingService } from "@/lib/api/listingService";
