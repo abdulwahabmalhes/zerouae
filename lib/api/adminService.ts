@@ -38,20 +38,9 @@ export const adminService = {
   },
 
   /** Categories */
-  createCategory: async (data: FormData | any) => {
+  createCategory: async (data: any) => {
     const res = await apiClient.post("/admin/categories", data);
     return res.data;
-  },
-  updateCategory: async (id: number, data: FormData | any) => {
-    // Laravel requires POST with _method=PUT for multipart/form-data updates
-    if (data instanceof FormData) {
-      data.append("_method", "PUT");
-      const res = await apiClient.post(`/admin/categories/${id}`, data);
-      return res.data;
-    } else {
-      const res = await apiClient.put(`/admin/categories/${id}`, data);
-      return res.data;
-    }
   },
   deleteCategory: async (id: number) => {
     const res = await apiClient.delete(`/admin/categories/${id}`);
