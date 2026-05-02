@@ -309,8 +309,9 @@ export default function AdminPage() {
                   }
                   await fetchData();
                   setShowCatModal(false);
-                } catch (e) {
-                  alert("Failed to save category");
+                } catch (e: any) {
+                  alert("Failed to save category: " + (e.response?.data?.message || e.message));
+                  console.error(e);
                 }
                 setCatSaving(false);
               }} className="btn-primary px-6 h-11 gap-2">
