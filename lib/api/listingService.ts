@@ -1,5 +1,4 @@
 import apiClient from "./apiClient";
-import { DEMO_LISTINGS, DEMO_CATEGORIES } from "@/lib/data/demoData";
 
 function applyFilters(items: any[], params: any) {
   let r = [...items];
@@ -16,28 +15,18 @@ function applyFilters(items: any[], params: any) {
 
 export const listingService = {
   getListings: async (params: any = {}) => {
-    try {
-      const res = await apiClient.get("/get-item", { params });
-      if (res.data?.success && res.data?.data?.length) return res.data;
-    } catch {}
-    return { success: true, data: applyFilters(DEMO_LISTINGS, params) };
+    const res = await apiClient.get("/get-item", { params });
+    return res.data;
   },
 
   getListing: async (id: string | number) => {
-    try {
-      const res = await apiClient.get("/get-item", { params: { id } });
-      if (res.data?.success && res.data?.data) return res.data;
-    } catch {}
-    const item = DEMO_LISTINGS.find(i => i.id === Number(id));
-    return item ? { success: true, data: item } : { success: false, data: null };
+    const res = await apiClient.get("/get-item", { params: { id } });
+    return res.data;
   },
 
   getFeatured: async () => {
-    try {
-      const res = await apiClient.get("/get-featured-section");
-      if (res.data?.success && res.data?.data?.length) return res.data;
-    } catch {}
-    return { success: true, data: DEMO_LISTINGS.filter(i => i.is_featured) };
+    const res = await apiClient.get("/get-featured-section");
+    return res.data;
   },
 
   createListing: async (payload: FormData) => {
@@ -60,11 +49,8 @@ export const listingService = {
   },
 
   getMyListings: async () => {
-    try {
-      const res = await apiClient.get("/my-items");
-      if (res.data?.success) return res.data;
-    } catch {}
-    return { success: true, data: DEMO_LISTINGS.slice(0, 4) };
+    const res = await apiClient.get("/my-items");
+    return res.data;
   },
 
   registerView: async (id: number) => {
@@ -85,10 +71,7 @@ export const listingService = {
   },
 
   getFavourites: async () => {
-    try {
-      const res = await apiClient.get("/get-favourite-item");
-      if (res.data?.success) return res.data;
-    } catch {}
-    return { success: true, data: [] };
+    const res = await apiClient.get("/get-favourite-item");
+    return res.data;
   },
 };
