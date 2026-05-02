@@ -73,7 +73,7 @@ export const listingService = {
 
   updateStatus: async (id: number, status: string) => {
     try {
-      const res = await apiClient.post("/update-item-status", { id, status });
+      const res = await apiClient.post("/admin/update-item-status", { id, status });
       return res.data;
     } catch {}
     return { success: true };
