@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
   LayoutDashboard, ListChecks, Users, Tag, BarChart3,
   LogOut, Menu, X, Check, Trash2, Eye, TrendingUp,
-  ShieldCheck, Clock, Star, AlertCircle, Plus
+  ShieldCheck, Clock, Star, AlertCircle, Plus, Edit, Image as ImageIcon, Loader2
 } from "lucide-react";
 import { useAuth } from "@/lib/context/AuthContext";
 import { listingService } from "@/lib/api/listingService";
@@ -31,6 +31,13 @@ export default function AdminPage() {
   const [stats, setStats]       = useState(DEMO_STATS);
   const [users, setUsers]       = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+
+  // Category Modal State
+  const [showCatModal, setShowCatModal] = useState(false);
+  const [editingCat, setEditingCat] = useState<any>(null);
+  const [catForm, setCatForm] = useState({ name: "", name_ar: "", icon: "" });
+  const [catImage, setCatImage] = useState<File | null>(null);
+  const [catSaving, setCatSaving] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -195,12 +202,11 @@ export default function AdminPage() {
           <div className="space-y-6">
              <div className="flex items-center justify-between">
                <h1 className="text-3xl font-black tracking-tighter">Categories ({categories.length})</h1>
-               <button onClick={async () => {
-                 const name = prompt("Enter category name (e.g. Cars):");
-                 if (name) {
-                   await adminService.createCategory({ name });
-                   fetchData();
-                 }
+               <button onClick={() => {
+                 setEditingCat(null);
+                 setCatForm({ name: "", name_ar: "", icon: "" });
+                 setCatImage(null);
+                 setShowCatModal(true);
                }} className="btn-primary h-10 px-5 gap-2 text-[10px]">
                  <Plus size={15} /> Add Category
                </button>
@@ -208,10 +214,27 @@ export default function AdminPage() {
              <div className="card divide-y divide-[var(--color-border)]">
                {categories.map(c => (
                  <div key={c.id} className="flex items-center gap-4 p-4">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-black">{c.icon || <Tag size={16} />}</div>
-                    <div className="flex-1"><p className="text-sm font-black">{c.name}</p></div>
+                    <div className="w-12 h-12 rounded-xl overflow-hidden relative bg-[var(--color-bg-soft)] flex-shrink-0 flex items-center justify-center">
+                      {c.image ? (
+                        <Image src={c.image} alt={c.name} fill className="object-cover" />
+                      ) : (
+                        c.icon ? <span className="font-black text-[var(--color-text-muted)]">{c.icon}</span> : <Tag size={20} className="text-[var(--color-text-muted)]"/>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-black">{c.name}</p>
+                      {c.name_ar && <p className="text-[10px] text-[var(--color-text-muted)] font-bold">{c.name_ar}</p>}
+                    </div>
+                    <button onClick={() => {
+                       setEditingCat(c);
+                       setCatForm({ name: c.name, name_ar: c.name_ar || "", icon: c.icon || "" });
+                       setCatImage(null);
+                       setShowCatModal(true);
+                    }} className="w-9 h-9 flex items-center justify-center rounded-lg bg-[var(--color-bg-soft)] text-[var(--color-text-main)] hover:bg-[var(--color-primary)] hover:text-white transition-colors">
+                      <Edit size={15} />
+                    </button>
                     <button onClick={async () => {
-                       if(confirm(`Delete category ${c.name}?`)) {
+                       if(confirm(`Are you sure you want to delete ${c.name}?`)) {
                          await adminService.deleteCategory(c.id);
                          fetchData();
                        }
@@ -229,6 +252,74 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+      {/* ── Category Modal ── */}
+      {showCatModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="card w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="p-5 border-b border-[var(--color-border)] flex items-center justify-between">
+              <h3 className="text-lg font-black">{editingCat ? "Edit Category" : "Add New Category"}</h3>
+              <button onClick={() => setShowCatModal(false)} className="text-[var(--color-text-muted)] hover:text-[var(--color-text-main)]"><X size={20}/></button>
+            </div>
+            <div className="p-5 overflow-y-auto space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">English Name *</label>
+                <input required value={catForm.name} onChange={e => setCatForm({...catForm, name: e.target.value})} className="input-field h-12" placeholder="e.g. Cars" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">Arabic Name / Description</label>
+                <input value={catForm.name_ar} onChange={e => setCatForm({...catForm, name_ar: e.target.value})} className="input-field h-12" placeholder="e.g. سيارات" dir="auto" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">Icon Text (Optional)</label>
+                <input value={catForm.icon} onChange={e => setCatForm({...catForm, icon: e.target.value})} className="input-field h-12" placeholder="e.g. 🚗 or 'Car'" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[var(--color-text-muted)] mb-2">Category Image (Optional)</label>
+                <label className="relative flex items-center justify-center w-full h-32 border-2 border-dashed border-[var(--color-border)] rounded-xl cursor-pointer hover:border-[var(--color-primary)] transition-colors overflow-hidden bg-[var(--color-bg-soft)]">
+                  {catImage ? (
+                    <Image src={URL.createObjectURL(catImage)} alt="Preview" fill className="object-cover" />
+                  ) : editingCat?.image ? (
+                    <Image src={editingCat.image} alt="Current" fill className="object-cover" />
+                  ) : (
+                    <div className="text-center text-[var(--color-text-muted)]">
+                      <ImageIcon size={24} className="mx-auto mb-2" />
+                      <span className="text-xs font-bold">Click to upload image</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => setCatImage(e.target.files?.[0] || null)} />
+                </label>
+              </div>
+            </div>
+            <div className="p-5 border-t border-[var(--color-border)] bg-[var(--color-bg-soft)] flex justify-end gap-3">
+              <button onClick={() => setShowCatModal(false)} className="px-5 h-11 rounded-xl text-xs font-black hover:bg-[var(--color-border)] transition-colors">Cancel</button>
+              <button disabled={!catForm.name || catSaving} onClick={async () => {
+                setCatSaving(true);
+                try {
+                  const fd = new FormData();
+                  fd.append("name", catForm.name);
+                  if (catForm.name_ar) fd.append("name_ar", catForm.name_ar);
+                  if (catForm.icon) fd.append("icon", catForm.icon);
+                  if (catImage) fd.append("image", catImage);
+
+                  if (editingCat) {
+                    await adminService.updateCategory(editingCat.id, fd);
+                  } else {
+                    await adminService.createCategory(fd);
+                  }
+                  await fetchData();
+                  setShowCatModal(false);
+                } catch (e) {
+                  alert("Failed to save category");
+                }
+                setCatSaving(false);
+              }} className="btn-primary px-6 h-11 gap-2">
+                {catSaving ? <Loader2 size={16} className="animate-spin" /> : "Save Category"}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
